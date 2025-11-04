@@ -21,10 +21,13 @@ export type Database = {
           current_amount: number
           deadline: string | null
           description: string
+          end_condition: string
           goal_amount: number
           id: string
           image_url: string | null
+          likes_count: number
           owner_id: string
+          start_date: string | null
           status: string
           title: string
           updated_at: string
@@ -35,10 +38,13 @@ export type Database = {
           current_amount?: number
           deadline?: string | null
           description: string
+          end_condition?: string
           goal_amount: number
           id?: string
           image_url?: string | null
+          likes_count?: number
           owner_id: string
+          start_date?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -49,10 +55,13 @@ export type Database = {
           current_amount?: number
           deadline?: string | null
           description?: string
+          end_condition?: string
           goal_amount?: number
           id?: string
           image_url?: string | null
+          likes_count?: number
           owner_id?: string
+          start_date?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -126,6 +135,27 @@ export type Database = {
           },
         ]
       }
+      likes: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -141,6 +171,36 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          collection_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          collection_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          collection_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }

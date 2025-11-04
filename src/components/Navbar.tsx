@@ -5,12 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import SearchBar from "./SearchBar";
+import AddCreditsDialog from "./AddCreditsDialog";
 
 interface NavbarProps {
   balance?: number;
+  onBalanceUpdate?: () => void;
+  onSearch?: (query: string) => void;
+  showSearch?: boolean;
 }
 
-const Navbar = ({ balance = 0 }: NavbarProps) => {
+const Navbar = ({ balance = 0, onBalanceUpdate, onSearch, showSearch = false }: NavbarProps) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<SupabaseUser | null>(null);
 
@@ -33,30 +38,42 @@ const Navbar = ({ balance = 0 }: NavbarProps) => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+    <nav className="sticky top-0 z-50 bg-background border-b">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <Link to="/" className="flex items-center gap-2 font-bold text-xl flex-shrink-0">
           <div className="p-2 rounded-lg" style={{ background: "var(--gradient-primary)" }}>
             <Coins className="h-5 w-5 text-white" />
           </div>
-          <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+          <span style={{ 
+            background: "var(--gradient-primary)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text"
+          }}>
             Zrzutka
           </span>
         </Link>
 
-        <div className="flex items-center gap-4">
+        {showSearch && onSearch && (
+          <div className="flex-1 max-w-md hidden md:block">
+            <SearchBar onSearch={onSearch} />
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 flex-shrink-0">
           {user ? (
             <>
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
-                  Dashboard
+                  <span className="hidden sm:inline">Dashboard</span>
                 </Button>
               </Link>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
                 <Coins className="h-4 w-4 text-primary" />
                 <span className="font-semibold text-primary">{balance}</span>
               </div>
+              <AddCreditsDialog onCreditsAdded={() => onBalanceUpdate?.()} />
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
               </Button>

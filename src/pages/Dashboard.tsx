@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Wallet, TrendingUp } from "lucide-react";
 import CollectionCard from "@/components/CollectionCard";
+import TransactionHistory from "@/components/TransactionHistory";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -72,7 +73,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <Navbar balance={balance} />
+      <Navbar balance={balance} onBalanceUpdate={fetchUserData} />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Mój Dashboard</h1>
@@ -143,6 +144,10 @@ const Dashboard = () => {
               ))}
             </div>
           )}
+        </section>
+
+        <section className="mt-8">
+          <TransactionHistory />
         </section>
       </main>
     </>

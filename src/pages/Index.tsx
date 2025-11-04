@@ -5,16 +5,25 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Plus, TrendingUp, Users, Coins } from "lucide-react";
 import CollectionCard from "@/components/CollectionCard";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const Index = () => {
   const [collections, setCollections] = useState<any[]>([]);
+  const [filteredCollections, setFilteredCollections] = useState<any[]>([]);
   const [balance, setBalance] = useState(0);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    checkAuth();
     fetchCollections();
     fetchBalance();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
 
   const fetchCollections = async () => {
     try {
@@ -27,10 +36,26 @@ const Index = () => {
 
       if (data) {
         setCollections(data);
+        setFilteredCollections(data);
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredCollections(collections);
+      return;
+    }
+
+    const filtered = collections.filter(
+      (collection) =>
+        collection.title.toLowerCase().includes(query.toLowerCase()) ||
+        collection.description.toLowerCase().includes(query.toLowerCase()) ||
+        collection.category.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredCollections(filtered);
   };
 
   const fetchBalance = async () => {
@@ -50,12 +75,22 @@ const Index = () => {
 
   return (
     <>
-      <Navbar balance={balance} />
+      <Navbar 
+        balance={balance} 
+        onBalanceUpdate={fetchBalance}
+        onSearch={handleSearch}
+        showSearch={true}
+      />
       
       {/* Hero Section */}
       <section className="py-20 px-4" style={{ background: "var(--gradient-hero)" }}>
         <div className="container mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6" style={{ 
+            background: "var(--gradient-primary)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text"
+          }}>
             Wspieraj Zbiórki Kredytami
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -69,11 +104,13 @@ const Index = () => {
                 Utwórz Zbiórkę
               </Button>
             </Link>
-            <Link to="/auth">
-              <Button size="lg" variant="outline">
-                Zacznij Teraz
-              </Button>
-            </Link>
+            {!user && (
+              <Link to="/auth">
+                <Button size="lg" variant="outline">
+                  Zacznij Teraz
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -113,11 +150,15 @@ const Index = () => {
 
           {loading ? (
             <p className="text-center text-muted-foreground">Ładowanie zbiórek...</p>
-          ) : collections.length === 0 ? (
-            <p className="text-center text-muted-foreground">Nie ma jeszcze żadnych zbiórek. Bądź pierwszy!</p>
+          ) : filteredCollections.length === 0 ? (
+            <p className="text-center text-muted-foreground">
+              {collections.length === 0 
+                ? "Nie ma jeszcze żadnych zbiórek. Bądź pierwszy!" 
+                : "Nie znaleziono zbiórek pasujących do wyszukiwania"}
+            </p>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {collections.map((collection) => (
+              {filteredCollections.map((collection) => (
                 <CollectionCard
                   key={collection.id}
                   id={collection.id}
