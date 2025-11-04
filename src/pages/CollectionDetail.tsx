@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
+import EditCollectionDialog from "@/components/EditCollectionDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,9 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Coins, Calendar, User, MessageCircle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Coins, Calendar, User, MessageCircle, Trash2, Heart } from "lucide-react";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { pl } from "date-fns/locale";
 
 const CollectionDetail = () => {
@@ -25,6 +27,7 @@ const CollectionDetail = () => {
   const [contributionAmount, setContributionAmount] = useState("");
   const [commentText, setCommentText] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -34,6 +37,17 @@ const CollectionDetail = () => {
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
+    
+    if (user && id) {
+      const { data } = await supabase
+        .from("likes")
+        .select("id")
+        .eq("collection_id", id)
+        .eq("user_id", user.id)
+        .single();
+      
+      setIsLiked(!!data);
+    }
   };
 
   const fetchData = async () => {
@@ -182,7 +196,30 @@ const CollectionDetail = () => {
 
       if (contributionError) throw contributionError;
 
-      toast.success("Wpłata zakończona pomyślnie!");
+      // Add transaction record
+      await supabase
+        .from("transactions")
+        .insert({
+          user_id: user!.id,
+          collection_id: id,
+          type: "contribution",
+          amount: -amount,
+          description: `Wpłata na zbiórke: ${collection.title}`,
+        });
+
+      // Check if collection reached goal and close it
+      const newTotal = collection.current_amount + amount;
+      if (collection.end_condition === "goal" && newTotal >= collection.goal_amount) {
+        await supabase
+          .from("collections")
+          .update({ status: "closed" })
+          .eq("id", id);
+        
+        toast.success("Zbiórka osiągnęła cel i została zamknięta!");
+      } else {
+        toast.success("Wpłata zakończona pomyślnie!");
+      }
+
       setContributionAmount("");
       fetchData();
     } catch (error: any) {
@@ -219,6 +256,75 @@ const CollectionDetail = () => {
       fetchData();
     } catch (error: any) {
       toast.error("Błąd podczas dodawania komentarza");
+    }
+  };
+
+  const handleDeleteCollection = async () => {
+    try {
+      const { error } = await supabase
+        .from("collections")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Zbiórka usunięta");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error("Błąd podczas usuwania zbiórki");
+    }
+  };
+
+  const handleToggleLike = async () => {
+    if (!user) {
+      toast.error("Musisz być zalogowany, aby polubić zbiórke");
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        // Unlike
+        const { error } = await supabase
+          .from("likes")
+          .delete()
+          .eq("collection_id", id)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        // Decrease likes count
+        await supabase
+          .from("collections")
+          .update({ likes_count: collection.likes_count - 1 })
+          .eq("id", id);
+
+        setIsLiked(false);
+        toast.success("Usunięto polubienie");
+      } else {
+        // Like
+        const { error } = await supabase
+          .from("likes")
+          .insert({
+            collection_id: id,
+            user_id: user.id,
+          });
+
+        if (error) throw error;
+
+        // Increase likes count
+        await supabase
+          .from("collections")
+          .update({ likes_count: collection.likes_count + 1 })
+          .eq("id", id);
+
+        setIsLiked(true);
+        toast.success("Polubiono zbiórke");
+      }
+
+      fetchData();
+    } catch (error: any) {
+      toast.error("Błąd podczas zmiany polubienia");
     }
   };
 
@@ -264,12 +370,64 @@ const CollectionDetail = () => {
             )}
 
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Badge variant="secondary">{collection.category}</Badge>
-                {collection.deadline && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {formatDistanceToNow(new Date(collection.deadline), { addSuffix: true, locale: pl })}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary">{collection.category}</Badge>
+                  <Badge variant={collection.status === "active" ? "default" : "outline"}>
+                    {collection.status === "active" ? "Aktywna" : "Zamknięta"}
+                  </Badge>
+                  {collection.start_date && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      Start: {format(new Date(collection.start_date), "dd.MM.yyyy", { locale: pl })}
+                    </div>
+                  )}
+                  {collection.deadline && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      Koniec: {formatDistanceToNow(new Date(collection.deadline), { addSuffix: true, locale: pl })}
+                    </div>
+                  )}
+                </div>
+                
+                {user && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={isLiked ? "default" : "outline"}
+                      size="sm"
+                      onClick={handleToggleLike}
+                    >
+                      <Heart className={`h-4 w-4 mr-1 ${isLiked ? "fill-current" : ""}`} />
+                      {collection.likes_count || 0}
+                    </Button>
+                    
+                    {user.id === collection.owner_id && (
+                      <>
+                        <EditCollectionDialog collection={collection} onUpdate={fetchData} />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Usuń
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Ta akcja jest nieodwracalna. Zbiórka zostanie trwale usunięta.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleDeleteCollection}>
+                                Usuń
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, TrendingUp, Users, Coins } from "lucide-react";
 import CollectionCard from "@/components/CollectionCard";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -13,12 +14,18 @@ const Index = () => {
   const [balance, setBalance] = useState(0);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   useEffect(() => {
     checkAuth();
     fetchCollections();
     fetchBalance();
   }, []);
+
+  useEffect(() => {
+    applyFiltersAndSort();
+  }, [collections, sortBy, filterCategory]);
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -31,31 +38,63 @@ const Index = () => {
         .from("collections")
         .select("*")
         .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(6);
+        .order("created_at", { ascending: false });
 
       if (data) {
         setCollections(data);
-        setFilteredCollections(data);
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const applyFiltersAndSort = () => {
+    let filtered = [...collections];
+
+    // Apply category filter
+    if (filterCategory !== "all") {
+      filtered = filtered.filter((c) => c.category === filterCategory);
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case "newest":
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case "popular":
+        filtered.sort((a, b) => b.likes_count - a.likes_count);
+        break;
+      case "progress":
+        filtered.sort((a, b) => {
+          const progressA = (a.current_amount / a.goal_amount) * 100;
+          const progressB = (b.current_amount / b.goal_amount) * 100;
+          return progressB - progressA;
+        });
+        break;
+      case "ending":
+        filtered = filtered
+          .filter((c) => c.deadline)
+          .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+        break;
+    }
+
+    setFilteredCollections(filtered);
+  };
+
   const handleSearch = (query: string) => {
     if (!query.trim()) {
-      setFilteredCollections(collections);
+      applyFiltersAndSort();
       return;
     }
 
-    const filtered = collections.filter(
+    const searchResults = collections.filter(
       (collection) =>
         collection.title.toLowerCase().includes(query.toLowerCase()) ||
         collection.description.toLowerCase().includes(query.toLowerCase()) ||
         collection.category.toLowerCase().includes(query.toLowerCase())
     );
-    setFilteredCollections(filtered);
+    
+    setFilteredCollections(searchResults);
   };
 
   const fetchBalance = async () => {
@@ -141,10 +180,39 @@ const Index = () => {
       {/* Collections Section */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
             <div>
               <h2 className="text-3xl font-bold mb-2">Popularne Zbiórki</h2>
               <p className="text-muted-foreground">Odkryj zbiórki, które wspiera społeczność</p>
+            </div>
+            
+            <div className="flex gap-4 flex-wrap">
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Kategoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Wszystkie</SelectItem>
+                  <SelectItem value="technologia">Technologia</SelectItem>
+                  <SelectItem value="edukacja">Edukacja</SelectItem>
+                  <SelectItem value="zdrowie">Zdrowie</SelectItem>
+                  <SelectItem value="sport">Sport</SelectItem>
+                  <SelectItem value="sztuka">Sztuka</SelectItem>
+                  <SelectItem value="inne">Inne</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sortuj" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Najnowsze</SelectItem>
+                  <SelectItem value="popular">Najpopularniejsze</SelectItem>
+                  <SelectItem value="progress">Największy postęp</SelectItem>
+                  <SelectItem value="ending">Kończące się</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
