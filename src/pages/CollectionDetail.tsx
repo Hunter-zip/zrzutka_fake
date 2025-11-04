@@ -41,9 +41,22 @@ const CollectionDetail = () => {
       // Fetch collection
       const { data: collectionData } = await supabase
         .from("collections")
-        .select("*, profiles:owner_id(display_name)")
+        .select("*")
         .eq("id", id)
         .single();
+
+      // Fetch owner profile separately
+      if (collectionData) {
+        const { data: ownerProfile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", collectionData.owner_id)
+          .single();
+        
+        if (ownerProfile) {
+          (collectionData as any).owner_display_name = ownerProfile.display_name;
+        }
+      }
 
       if (collectionData) {
         setCollection(collectionData);
@@ -52,10 +65,25 @@ const CollectionDetail = () => {
       // Fetch contributions
       const { data: contributionsData } = await supabase
         .from("contributions")
-        .select("*, profiles:user_id(display_name)")
+        .select("*")
         .eq("collection_id", id)
         .eq("public", true)
         .order("created_at", { ascending: false });
+
+      // Fetch user profiles for contributions
+      if (contributionsData && contributionsData.length > 0) {
+        const userIds = [...new Set(contributionsData.map(c => c.user_id))];
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("id", userIds);
+
+        // Add display names to contributions
+        contributionsData.forEach((contribution: any) => {
+          const profile = profilesData?.find(p => p.id === contribution.user_id);
+          contribution.display_name = profile?.display_name || "Użytkownik";
+        });
+      }
 
       if (contributionsData) {
         setContributions(contributionsData);
@@ -64,9 +92,24 @@ const CollectionDetail = () => {
       // Fetch comments
       const { data: commentsData } = await supabase
         .from("comments")
-        .select("*, profiles:user_id(display_name)")
+        .select("*")
         .eq("collection_id", id)
         .order("created_at", { ascending: false });
+
+      // Fetch user profiles for comments
+      if (commentsData && commentsData.length > 0) {
+        const userIds = [...new Set(commentsData.map(c => c.user_id))];
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("id", userIds);
+
+        // Add display names to comments
+        commentsData.forEach((comment: any) => {
+          const profile = profilesData?.find(p => p.id === comment.user_id);
+          comment.display_name = profile?.display_name || "Użytkownik";
+        });
+      }
 
       if (commentsData) {
         setComments(commentsData);
@@ -235,7 +278,7 @@ const CollectionDetail = () => {
               
               <div className="flex items-center gap-2 text-muted-foreground mb-6">
                 <User className="h-4 w-4" />
-                <span>przez {collection.profiles?.display_name || "Użytkownik"}</span>
+                <span>przez {collection.owner_display_name || "Użytkownik"}</span>
               </div>
 
               <p className="text-lg leading-relaxed whitespace-pre-wrap">{collection.description}</p>
@@ -270,12 +313,12 @@ const CollectionDetail = () => {
                       <div key={comment.id} className="flex gap-3">
                         <Avatar>
                           <AvatarFallback>
-                            {comment.profiles?.display_name?.[0]?.toUpperCase() || "U"}
+                            {comment.display_name?.[0]?.toUpperCase() || "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold">{comment.profiles?.display_name || "Użytkownik"}</span>
+                            <span className="font-semibold">{comment.display_name || "Użytkownik"}</span>
                             <span className="text-xs text-muted-foreground">
                               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: pl })}
                             </span>
@@ -362,10 +405,10 @@ const CollectionDetail = () => {
                         <div className="flex items-center gap-2">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback className="text-xs">
-                              {contribution.profiles?.display_name?.[0]?.toUpperCase() || "U"}
+                              {contribution.display_name?.[0]?.toUpperCase() || "U"}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm">{contribution.profiles?.display_name || "Anonim"}</span>
+                          <span className="text-sm">{contribution.display_name || "Anonim"}</span>
                         </div>
                         <div className="flex items-center gap-1 text-sm font-semibold text-primary">
                           <Coins className="h-3 w-3" />
