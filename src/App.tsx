@@ -9,6 +9,9 @@ import Dashboard from "./pages/Dashboard";
 import CreateCollection from "./pages/CreateCollection";
 import CollectionDetail from "./pages/CollectionDetail";
 import AdminPanel from "./pages/AdminPanel";
+import Forum from "./pages/Forum";
+import ForumPost from "./pages/ForumPost";
+import CreateForumPost from "./pages/CreateForumPost";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
           <Route path="/create" element={<CreateCollection />} />
           <Route path="/collection/:id" element={<CollectionDetail />} />
           <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/forum" element={<Forum />} />
+          <Route path="/forum/:id" element={<ForumPost />} />
+          <Route path="/forum/new" element={<CreateForumPost />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

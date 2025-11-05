@@ -61,6 +61,11 @@ const Navbar = ({ balance = 0, onBalanceUpdate, onSearch, showSearch = false }: 
         )}
 
         <div className="flex items-center gap-3 flex-shrink-0">
+          <Link to="/forum">
+            <Button variant="ghost" size="sm">
+              Forum
+            </Button>
+          </Link>
           {user ? (
             <>
               <Link to="/dashboard">

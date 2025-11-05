@@ -32,8 +32,9 @@ const CreateCollection = () => {
     description: "",
     goal_amount: "",
     category: "",
-    image_url: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -62,6 +63,18 @@ const CreateCollection = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -87,13 +100,37 @@ const CreateCollection = () => {
         return;
       }
 
+      let imageUrl = null;
+
+      // Upload image if file is selected
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('collection-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) {
+          toast.error("Błąd przesyłania zdjęcia");
+          setLoading(false);
+          return;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('collection-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      }
+
       const { error } = await supabase.from("collections").insert({
         owner_id: user.id,
         title: formData.title,
         description: formData.description,
         goal_amount: parseInt(formData.goal_amount),
         category: formData.category,
-        image_url: formData.image_url || null,
+        image_url: imageUrl,
         start_date: isScheduled && startDate ? startDate.toISOString() : new Date().toISOString(),
         deadline: endCondition === "date" && endDate ? endDate.toISOString() : null,
         end_condition: endCondition,
@@ -272,14 +309,22 @@ const CreateCollection = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image_url">URL zdjęcia (opcjonalnie)</Label>
+                <Label htmlFor="image">Zdjęcie zbiórki (opcjonalnie)</Label>
                 <Input
-                  id="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
                 />
+                {imagePreview && (
+                  <div className="mt-2">
+                    <img 
+                      src={imagePreview} 
+                      alt="Podgląd" 
+                      className="max-w-xs rounded-lg border"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-4 pt-4">
