@@ -122,9 +122,9 @@ const Index = () => {
       />
       
       {/* Hero Section */}
-      <section className="py-20 px-4" style={{ background: "var(--gradient-hero)" }}>
+      <section className="py-12 sm:py-16 md:py-20 px-4" style={{ background: "var(--gradient-hero)" }}>
         <div className="container mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6" style={{ 
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6" style={{ 
             background: "var(--gradient-primary)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
@@ -132,20 +132,20 @@ const Index = () => {
           }}>
             Wspieraj Zbiórki Kredytami
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Twórz zbiórki i wpłacaj wirtualne kredyty na cele, które Ci się podobają. 
             Społeczność, gamifikacja i zero prawdziwych pieniędzy.
           </p>
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex gap-3 sm:gap-4 justify-center flex-wrap px-4">
             <Link to="/create">
-              <Button size="lg" className="gap-2">
-                <Plus className="h-5 w-5" />
+              <Button size="lg" className="gap-2 text-sm sm:text-base">
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                 Utwórz Zbiórkę
               </Button>
             </Link>
             {!user && (
               <Link to="/auth">
-                <Button size="lg" variant="outline">
+                <Button size="lg" variant="outline" className="text-sm sm:text-base">
                   Zacznij Teraz
                 </Button>
               </Link>
@@ -155,40 +155,40 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 bg-muted/30">
+      <section className="py-8 sm:py-10 md:py-12 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
             <div>
-              <TrendingUp className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <h3 className="text-3xl font-bold mb-2">100+</h3>
-              <p className="text-muted-foreground">Aktywnych Zbiórek</p>
+              <TrendingUp className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
+              <h3 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">100+</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Aktywnych Zbiórek</p>
             </div>
             <div>
-              <Users className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <h3 className="text-3xl font-bold mb-2">500+</h3>
-              <p className="text-muted-foreground">Użytkowników</p>
+              <Users className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
+              <h3 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">500+</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Użytkowników</p>
             </div>
             <div>
-              <Coins className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <h3 className="text-3xl font-bold mb-2">50k+</h3>
-              <p className="text-muted-foreground">Kredytów Wpłaconych</p>
+              <Coins className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-primary" />
+              <h3 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">50k+</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Kredytów Wpłaconych</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Collections Section */}
-      <section className="py-16 px-4">
+      <section className="py-8 sm:py-12 md:py-16 px-4">
         <div className="container mx-auto">
-          <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Popularne Zbiórki</h2>
-              <p className="text-muted-foreground">Odkryj zbiórki, które wspiera społeczność</p>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Popularne Zbiórki</h2>
+              <p className="text-sm sm:text-base text-muted-foreground">Odkryj zbiórki, które wspiera społeczność</p>
             </div>
             
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[160px] md:w-[180px]">
                   <SelectValue placeholder="Kategoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -203,7 +203,7 @@ const Index = () => {
               </Select>
 
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[160px] md:w-[180px]">
                   <SelectValue placeholder="Sortuj" />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,7 +225,7 @@ const Index = () => {
                 : "Nie znaleziono zbiórek pasujących do wyszukiwania"}
             </p>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredCollections.map((collection) => (
                 <CollectionCard
                   key={collection.id}

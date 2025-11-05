@@ -355,10 +355,10 @@ const CollectionDetail = () => {
   return (
     <>
       <Navbar balance={balance} />
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {collection.image_url && (
               <div className="aspect-video rounded-lg overflow-hidden">
                 <img
@@ -370,22 +370,22 @@ const CollectionDetail = () => {
             )}
 
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <Badge variant="secondary">{collection.category}</Badge>
                   <Badge variant={collection.status === "active" ? "default" : "outline"}>
                     {collection.status === "active" ? "Aktywna" : "Zamknięta"}
                   </Badge>
                   {collection.start_date && (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      Start: {format(new Date(collection.start_date), "dd.MM.yyyy", { locale: pl })}
+                    <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Start: </span>{format(new Date(collection.start_date), "dd.MM.yyyy", { locale: pl })}
                     </div>
                   )}
                   {collection.deadline && (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      Koniec: {formatDistanceToNow(new Date(collection.deadline), { addSuffix: true, locale: pl })}
+                    <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Koniec: </span>{formatDistanceToNow(new Date(collection.deadline), { addSuffix: true, locale: pl })}
                     </div>
                   )}
                 </div>
@@ -432,14 +432,14 @@ const CollectionDetail = () => {
                 )}
               </div>
               
-              <h1 className="text-4xl font-bold mb-4">{collection.title}</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{collection.title}</h1>
               
-              <div className="flex items-center gap-2 text-muted-foreground mb-6">
-                <User className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
+                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>przez {collection.owner_display_name || "Użytkownik"}</span>
               </div>
 
-              <p className="text-lg leading-relaxed whitespace-pre-wrap">{collection.description}</p>
+              <p className="text-base sm:text-lg leading-relaxed whitespace-pre-wrap">{collection.description}</p>
             </div>
 
             {/* Comments Section */}

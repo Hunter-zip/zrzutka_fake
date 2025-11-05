@@ -206,20 +206,20 @@ const AdminPanel = () => {
   return (
     <>
       <Navbar balance={balance} />
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold">Panel Administracyjny</h1>
+      <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Panel Administracyjny</h1>
           </div>
-          <p className="text-muted-foreground">Zarządzaj zbiórkami i użytkownikami platformy</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Zarządzaj zbiórkami i użytkownikami platformy</p>
         </div>
 
-        <Tabs defaultValue="collections" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="collections">Zbiórki</TabsTrigger>
-            <TabsTrigger value="users">Użytkownicy</TabsTrigger>
-            <TabsTrigger value="wallets">Portfele</TabsTrigger>
+        <Tabs defaultValue="collections" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="collections" className="text-xs sm:text-sm">Zbiórki</TabsTrigger>
+            <TabsTrigger value="users" className="text-xs sm:text-sm">Użytkownicy</TabsTrigger>
+            <TabsTrigger value="wallets" className="text-xs sm:text-sm">Portfele</TabsTrigger>
           </TabsList>
 
           <TabsContent value="collections">
@@ -228,40 +228,41 @@ const AdminPanel = () => {
                 <CardTitle>Wszystkie Zbiórki</CardTitle>
                 <CardDescription>Zarządzaj wszystkimi zbiórkami na platformie</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Tytuł</TableHead>
-                      <TableHead>Właściciel</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Postęp</TableHead>
-                      <TableHead>Data utworzenia</TableHead>
-                      <TableHead>Akcje</TableHead>
+                      <TableHead className="min-w-[150px]">Tytuł</TableHead>
+                      <TableHead className="hidden md:table-cell min-w-[120px]">Właściciel</TableHead>
+                      <TableHead className="min-w-[80px]">Status</TableHead>
+                      <TableHead className="hidden sm:table-cell min-w-[100px]">Postęp</TableHead>
+                      <TableHead className="hidden lg:table-cell min-w-[120px]">Data utworzenia</TableHead>
+                      <TableHead className="min-w-[150px]">Akcje</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {collections.map((collection) => (
                       <TableRow key={collection.id}>
                         <TableCell className="font-medium">{collection.title}</TableCell>
-                        <TableCell>{collection.profiles?.display_name || "Użytkownik"}</TableCell>
+                        <TableCell className="hidden md:table-cell">{collection.profiles?.display_name || "Użytkownik"}</TableCell>
                         <TableCell>
                           <Badge variant={collection.status === "active" ? "default" : "secondary"}>
                             {collection.status === "active" ? "Aktywna" : "Zamknięta"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {collection.current_amount} / {collection.goal_amount}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           {formatDistanceToNow(new Date(collection.created_at), { addSuffix: true, locale: pl })}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => navigate(`/collection/${collection.id}`)}
+                              className="p-2"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -269,12 +270,13 @@ const AdminPanel = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleToggleCollectionStatus(collection.id, collection.status)}
+                              className="hidden sm:flex"
                             >
                               {collection.status === "active" ? "Zamknij" : "Aktywuj"}
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
+                                <Button variant="destructive" size="sm" className="p-2">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
@@ -309,28 +311,28 @@ const AdminPanel = () => {
                 <CardTitle>Wszyscy Użytkownicy</CardTitle>
                 <CardDescription>Zarządzaj kontami użytkowników</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nazwa użytkownika</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Data rejestracji</TableHead>
-                      <TableHead>Akcje</TableHead>
+                      <TableHead className="min-w-[120px]">Nazwa użytkownika</TableHead>
+                      <TableHead className="hidden md:table-cell min-w-[200px]">ID</TableHead>
+                      <TableHead className="hidden sm:table-cell min-w-[120px]">Data rejestracji</TableHead>
+                      <TableHead className="min-w-[80px]">Akcje</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {users.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.display_name}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{user.id}</TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{user.id}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm">
                           {formatDistanceToNow(new Date(user.created_at), { addSuffix: true, locale: pl })}
                         </TableCell>
                         <TableCell>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
+                              <Button variant="destructive" size="sm" className="p-2">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -364,15 +366,15 @@ const AdminPanel = () => {
                 <CardTitle>Portfele Użytkowników</CardTitle>
                 <CardDescription>Zarządzaj środkami użytkowników</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Użytkownik</TableHead>
-                      <TableHead>ID Użytkownika</TableHead>
-                      <TableHead>Saldo</TableHead>
-                      <TableHead>Ostatnia aktualizacja</TableHead>
-                      <TableHead>Akcje</TableHead>
+                      <TableHead className="min-w-[120px]">Użytkownik</TableHead>
+                      <TableHead className="hidden md:table-cell min-w-[200px]">ID Użytkownika</TableHead>
+                      <TableHead className="min-w-[80px]">Saldo</TableHead>
+                      <TableHead className="hidden lg:table-cell min-w-[120px]">Ostatnia aktualizacja</TableHead>
+                      <TableHead className="min-w-[120px]">Akcje</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -381,14 +383,14 @@ const AdminPanel = () => {
                         <TableCell className="font-medium">
                           {wallet.profiles?.display_name || "Użytkownik"}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{wallet.user_id}</TableCell>
+                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{wallet.user_id}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Wallet className="h-4 w-4 text-primary" />
-                            <span className="font-semibold">{wallet.balance}</span>
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                            <span className="font-semibold text-sm sm:text-base">{wallet.balance}</span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm">
                           {formatDistanceToNow(new Date(wallet.updated_at), { addSuffix: true, locale: pl })}
                         </TableCell>
                         <TableCell>

@@ -74,13 +74,13 @@ const Dashboard = () => {
   return (
     <>
       <Navbar balance={balance} onBalanceUpdate={fetchUserData} />
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Mój Dashboard</h1>
-          <p className="text-muted-foreground">Zarządzaj swoimi zbiórkami i kredytami</p>
+      <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">Mój Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Zarządzaj swoimi zbiórkami i kredytami</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Saldo Kredytów</CardTitle>
@@ -116,19 +116,19 @@ const Dashboard = () => {
         </div>
 
         <section>
-          <h2 className="text-2xl font-bold mb-4">Moje Zbiórki</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Moje Zbiórki</h2>
           {myCollections.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground mb-4">Nie masz jeszcze żadnych zbiórek</p>
-                <Button onClick={() => navigate("/create")}>
+              <CardContent className="py-8 sm:py-12 text-center">
+                <p className="text-sm sm:text-base text-muted-foreground mb-4">Nie masz jeszcze żadnych zbiórek</p>
+                <Button onClick={() => navigate("/create")} size="sm" className="sm:size-default">
                   <Plus className="h-4 w-4 mr-2" />
                   Utwórz Pierwszą Zbiórkę
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {myCollections.map((collection) => (
                 <CollectionCard
                   key={collection.id}
