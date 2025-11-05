@@ -159,6 +159,7 @@ export type Database = {
       forum_posts: {
         Row: {
           category_id: string | null
+          collection_id: string | null
           content: string
           created_at: string
           id: string
@@ -168,6 +169,7 @@ export type Database = {
         }
         Insert: {
           category_id?: string | null
+          collection_id?: string | null
           content: string
           created_at?: string
           id?: string
@@ -177,6 +179,7 @@ export type Database = {
         }
         Update: {
           category_id?: string | null
+          collection_id?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -190,6 +193,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "forum_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_posts_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
             referencedColumns: ["id"]
           },
         ]

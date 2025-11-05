@@ -20,8 +20,12 @@ interface Post {
   created_at: string;
   user_id: string;
   category_id: string | null;
+  collection_id: string | null;
   profiles: {
     display_name: string;
+  };
+  collection?: {
+    title: string;
   };
   replies_count?: number;
 }
@@ -91,10 +95,23 @@ const Forum = () => {
           .from("forum_replies")
           .select("*", { count: "exact", head: true })
           .eq("post_id", post.id);
+
+        // Fetch collection if it exists
+        let collection = null;
+        if (post.collection_id) {
+          const { data: collectionData } = await supabase
+            .from("collections")
+            .select("title")
+            .eq("id", post.collection_id)
+            .single();
+          
+          collection = collectionData;
+        }
         
         return { 
           ...post, 
           profiles: profile || { display_name: "Nieznany" },
+          collection: collection || undefined,
           replies_count: count || 0 
         };
       })
@@ -167,6 +184,12 @@ const Forum = () => {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold mb-2">{post.title}</h3>
+                    {post.collection && (
+                      <div className="mb-2">
+                        <span className="text-sm text-muted-foreground">Zbiórka: </span>
+                        <span className="text-sm font-medium">{post.collection.title}</span>
+                      </div>
+                    )}
                     <p className="text-muted-foreground line-clamp-2 mb-4">{post.content}</p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>Autor: {post.profiles?.display_name || "Nieznany"}</span>

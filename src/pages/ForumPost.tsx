@@ -14,8 +14,12 @@ interface Post {
   content: string;
   created_at: string;
   user_id: string;
+  collection_id: string | null;
   profiles: {
     display_name: string;
+  };
+  collection?: {
+    title: string;
   };
 }
 
@@ -81,7 +85,23 @@ const ForumPost = () => {
       .eq("id", data.user_id)
       .single();
 
-    setPost({ ...data, profiles: profile || { display_name: "Nieznany" } });
+    // Fetch collection if it exists
+    let collection = null;
+    if (data.collection_id) {
+      const { data: collectionData } = await supabase
+        .from("collections")
+        .select("title")
+        .eq("id", data.collection_id)
+        .single();
+      
+      collection = collectionData;
+    }
+
+    setPost({ 
+      ...data, 
+      profiles: profile || { display_name: "Nieznany" },
+      collection: collection || undefined
+    });
     setLoading(false);
   };
 
@@ -219,7 +239,24 @@ const ForumPost = () => {
         {/* Post */}
         <Card className="p-6 mb-8">
           <div className="flex justify-between items-start mb-4">
-            <h1 className="text-3xl font-bold">{post.title}</h1>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
+              {post.collection && (
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-sm text-muted-foreground">Dotyczy zbiórki:</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/collection/${post.collection_id}`);
+                    }}
+                  >
+                    {post.collection.title}
+                  </Button>
+                </div>
+              )}
+            </div>
             {(user?.id === post.user_id || isAdmin) && (
               <Button
                 variant="destructive"

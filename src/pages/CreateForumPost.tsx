@@ -15,17 +15,25 @@ interface Category {
   name: string;
 }
 
+interface Collection {
+  id: string;
+  title: string;
+}
+
 const CreateForumPost = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
+  const [collectionId, setCollectionId] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     checkAuth();
     fetchCategories();
+    fetchCollections();
   }, []);
 
   const checkAuth = async () => {
@@ -50,6 +58,21 @@ const CreateForumPost = () => {
     setCategories(data || []);
   };
 
+  const fetchCollections = async () => {
+    const { data, error } = await supabase
+      .from("collections")
+      .select("id, title")
+      .eq("status", "active")
+      .order("title");
+
+    if (error) {
+      toast.error("Błąd pobierania zbiórek");
+      return;
+    }
+
+    setCollections(data || []);
+  };
+
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
       toast.error("Wypełnij wszystkie pola");
@@ -71,6 +94,7 @@ const CreateForumPost = () => {
         title,
         content,
         category_id: categoryId || null,
+        collection_id: collectionId || null,
         user_id: session.user.id,
       });
 
@@ -122,6 +146,22 @@ const CreateForumPost = () => {
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Zbiórka (opcjonalnie)</label>
+              <Select value={collectionId} onValueChange={setCollectionId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Wybierz zbiórkę" />
+                </SelectTrigger>
+                <SelectContent>
+                  {collections.map((collection) => (
+                    <SelectItem key={collection.id} value={collection.id}>
+                      {collection.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
