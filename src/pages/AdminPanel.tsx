@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Trash2, Edit, Users, Coins as CoinsIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Shield, Trash2, Edit, Users, Coins as CoinsIcon, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -20,7 +21,10 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [wallets, setWallets] = useState<any[]>([]);
   const [balance, setBalance] = useState(0);
+  const [selectedWallet, setSelectedWallet] = useState<any>(null);
+  const [newBalance, setNewBalance] = useState("");
 
   useEffect(() => {
     checkAdminStatus();
@@ -91,6 +95,16 @@ const AdminPanel = () => {
     if (profilesData) {
       setUsers(profilesData);
     }
+
+    // Fetch all wallets with user profiles
+    const { data: walletsData } = await supabase
+      .from("wallets")
+      .select("*, profiles(display_name)")
+      .order("created_at", { ascending: false });
+
+    if (walletsData) {
+      setWallets(walletsData);
+    }
   };
 
   const handleDeleteCollection = async (collectionId: string) => {
@@ -145,6 +159,35 @@ const AdminPanel = () => {
     }
   };
 
+  const handleUpdateWalletBalance = async () => {
+    if (!selectedWallet || !newBalance) {
+      toast.error("Wprowadź nowy balans");
+      return;
+    }
+
+    const balanceNum = parseInt(newBalance);
+    if (isNaN(balanceNum) || balanceNum < 0) {
+      toast.error("Nieprawidłowa kwota");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("wallets")
+        .update({ balance: balanceNum })
+        .eq("user_id", selectedWallet.user_id);
+
+      if (error) throw error;
+
+      toast.success("Saldo zaktualizowane");
+      setSelectedWallet(null);
+      setNewBalance("");
+      fetchData();
+    } catch (error: any) {
+      toast.error("Błąd podczas aktualizacji salda");
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -176,6 +219,7 @@ const AdminPanel = () => {
           <TabsList>
             <TabsTrigger value="collections">Zbiórki</TabsTrigger>
             <TabsTrigger value="users">Użytkownicy</TabsTrigger>
+            <TabsTrigger value="wallets">Portfele</TabsTrigger>
           </TabsList>
 
           <TabsContent value="collections">
@@ -305,6 +349,89 @@ const AdminPanel = () => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="wallets">
+            <Card>
+              <CardHeader>
+                <CardTitle>Portfele Użytkowników</CardTitle>
+                <CardDescription>Zarządzaj środkami użytkowników</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Użytkownik</TableHead>
+                      <TableHead>ID Użytkownika</TableHead>
+                      <TableHead>Saldo</TableHead>
+                      <TableHead>Ostatnia aktualizacja</TableHead>
+                      <TableHead>Akcje</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {wallets.map((wallet) => (
+                      <TableRow key={wallet.id}>
+                        <TableCell className="font-medium">
+                          {wallet.profiles?.display_name || "Użytkownik"}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{wallet.user_id}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Wallet className="h-4 w-4 text-primary" />
+                            <span className="font-semibold">{wallet.balance}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {formatDistanceToNow(new Date(wallet.updated_at), { addSuffix: true, locale: pl })}
+                        </TableCell>
+                        <TableCell>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedWallet(wallet);
+                                  setNewBalance(wallet.balance.toString());
+                                }}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edytuj saldo
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edytuj saldo użytkownika</DialogTitle>
+                                <DialogDescription>
+                                  Zmień saldo portfela użytkownika {wallet.profiles?.display_name || "Użytkownik"}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium">Obecne saldo: {wallet.balance}</label>
+                                  <Input
+                                    type="number"
+                                    placeholder="Nowe saldo"
+                                    value={newBalance}
+                                    onChange={(e) => setNewBalance(e.target.value)}
+                                    min="0"
+                                  />
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button onClick={handleUpdateWalletBalance}>
+                                  Zapisz zmiany
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
                         </TableCell>
                       </TableRow>
                     ))}
